@@ -1,5 +1,7 @@
 package entity
 
+import "time"
+
 const (
 	EnvLocal = "local"
 	EnvDev   = "dev"
@@ -11,6 +13,13 @@ type Template struct {
 	Description  string        `json:"description"`
 	Dependencies []*Dependency `json:"dependencies"`
 	Nodes        []*Node       `json:"dirs"`
+}
+
+type TemplateInfo struct {
+	Name      string
+	Type      string
+	Size      int64
+	CreatedAt time.Time
 }
 
 type Node struct {
@@ -29,4 +38,12 @@ type Dependency struct {
 type Variables struct {
 	Name        string
 	Description string
+}
+
+type FieldConfig struct {
+	Key         string
+	Placeholder string
+	Width       int
+	CharLimit   int
+	Required    bool
 }

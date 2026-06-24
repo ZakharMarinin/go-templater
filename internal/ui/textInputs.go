@@ -18,18 +18,23 @@ type textModel struct {
 	cursorMode  cursor.Mode
 	quitting    bool
 	interupting bool
-	noName      bool
+	validationFailed      bool
 	styles      *Styles
+	fields      []*entity.FieldConfig
 }
 
 type Styles struct {
-	focusedStyle *lipgloss.Style
-	blurredStyle *lipgloss.Style
+	focusedStyle  *lipgloss.Style
+	blurredStyle  *lipgloss.Style
 	focusedButton string
 	blurredButton string
 }
 
-func (ui *UI) Input() (*entity.Variables, error) {
+func (ui *UI) DynamicInput(title string, fields []*entity.FieldConfig) (map[string]string, error) {
+	if len(fields) == 0 {
+		return nil, fmt.Errorf("no fields provided")
+	}
+
 	var (
 		focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ui.cfg.Colors.Highlight))
 		blurredStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ui.cfg.Colors.Black))
@@ -37,22 +42,35 @@ func (ui *UI) Input() (*entity.Variables, error) {
 		focusedButton = focusedStyle.Render("[ Submit ]")
 		blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
 	)
-	
+
 	m := textModel{
 		focusIndex: 0,
-		inputs:     make([]textinput.Model, 2),
+		inputs:     make([]textinput.Model, len(fields)),
 		cursorMode: cursor.CursorBlink,
 		styles: &Styles{
-			focusedStyle: &focusedStyle,
-			blurredStyle: &blurredStyle,
+			focusedStyle:  &focusedStyle,
+			blurredStyle:  &blurredStyle,
 			focusedButton: focusedButton,
 			blurredButton: blurredButton,
 		},
 	}
 
-	for i := range m.inputs {
+	m.fields = fields
+
+	for i, f := range fields {
 		t := textinput.New()
-		t.CharLimit = 32
+
+		if f.CharLimit > 0 {
+			t.CharLimit = f.CharLimit
+		} else {
+			t.CharLimit = 32
+		}
+
+		if f.Width > 0 {
+			t.SetWidth(f.Width)
+		} else {
+			t.SetWidth(32)
+		}
 
 		s := t.Styles()
 		s.Cursor.Color = lipgloss.Color(ui.cfg.Colors.Highlight)
@@ -62,16 +80,12 @@ func (ui *UI) Input() (*entity.Variables, error) {
 		s.Blurred.Text = blurredStyle
 		t.SetStyles(s)
 
-		switch i {
-		case 0:
-			t.Placeholder = "Name (required)"
-			t.SetWidth(32)
+		t.Placeholder = f.Placeholder
+
+		if i == 0 {
 			t.Focus()
-		case 1:
-			t.Placeholder = "Description (optional)"
-			t.SetWidth(64)
-			t.CharLimit = 64
 		}
+
 		m.inputs[i] = t
 	}
 
@@ -87,14 +101,17 @@ func (ui *UI) Input() (*entity.Variables, error) {
 		return nil, response.ErrCanceled
 	}
 
-	if res.inputs[0].Value() == "" {
-		return nil, fmt.Errorf("name is required")
+	resultMap := make(map[string]string)
+	for i, f := range fields {
+		val := res.inputs[i].Value()
+
+		if f.Required && val == "" {
+			return nil, fmt.Errorf("field '%s' is required", f.Placeholder)
+		}
+		resultMap[f.Key] = val
 	}
 
-	return &entity.Variables{
-		Name:        res.inputs[0].Value(),
-		Description: res.inputs[1].Value(),
-	}, nil
+	return resultMap, nil
 }
 
 func (m textModel) Init() tea.Cmd {
@@ -110,18 +127,21 @@ func (m textModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			return m, tea.Quit
 
-		case tab, shift+tab, enter, up, down:
+		case tab, shift + tab, enter, up, down:
 			s := msg.String()
 
 			if s == enter && m.focusIndex == len(m.inputs) {
-				if m.inputs[0].Value() == "" {
-					m.noName = true
-
-					return m, nil
-				}
-				m.quitting = true
-
-				return m, tea.Quit
+			    for i, f := range m.fields {
+			        if f.Required && m.inputs[i].Value() == "" {
+			            m.validationFailed = true
+															
+			            return m, nil
+			        }
+			    }
+			    
+			    m.quitting = true
+							
+			    return m, tea.Quit
 			}
 
 			if s == up || s == shift+tab {
@@ -188,8 +208,8 @@ func (m textModel) View() tea.View {
 	}
 	fmt.Fprintf(&b, "\n\n%s\n", *button)
 
-	if m.noName {
-		b.WriteString(m.styles.focusedStyle.Render("\nName is required!"))
+	if m.validationFailed {
+		b.WriteString(m.styles.focusedStyle.Render("\nPlease fill in all required fields!"))
 	}
 
 	v := tea.NewView(b.String())

@@ -19,6 +19,7 @@ type UseCase interface {
 	InsertDirTemplate(homeDir string) error
 	InsertDepsTemplate(homeDir string) error
 	RemoveTemplate(removeType string) error
+	ListTemplates() error
 }
 
 type Cobra struct {
@@ -49,7 +50,6 @@ Example:
 func (c *Cobra) Execute() {
 	err := c.rootCmd.Execute()
 	if err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }
@@ -70,9 +70,20 @@ func (c *Cobra) setupCommands() {
 
 	removeCmd := &cobra.Command{
 		Use:   "remove",
-		Short: "Commands for removing templates",
+		Short: "Command for removing templates",
 	}
 
+	listCmd := &cobra.Command{
+		Use: "list",
+		Short: "Command for list all templates",
+		Run: func(cmd *cobra.Command, args []string) {
+			err := c.uc.ListTemplates()
+			if err != nil {
+				os.Exit(1)
+			}
+		},
+	}
+	
 	removeStructCmd := &cobra.Command{
 		Use:   structs,
 		Short: "Select and remove a structure template",
@@ -154,7 +165,7 @@ func (c *Cobra) setupCommands() {
 	makeCmd.AddCommand(makeStructCmd, makeDepsCmd)
 	insertCmd.AddCommand(insertStructCmd, insertDepsCmd)
 
-	c.rootCmd.AddCommand(makeCmd, insertCmd, removeCmd)
+	c.rootCmd.AddCommand(makeCmd, insertCmd, removeCmd, listCmd)
 }
 
 func resolveDirectory(flagValue string) string {
