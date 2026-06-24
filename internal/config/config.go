@@ -58,11 +58,7 @@ func getConfig() (*Config, error) {
 			Highlight: "#FF91B6",
 		},
 	}
-
-	cfg.Routes.StructsDir = filepath.Join(baseDir, cfg.Routes.StructsDir)
-	cfg.Routes.DepsDir = filepath.Join(baseDir, cfg.Routes.DepsDir)
-	cfg.Routes.LogsDir = filepath.Join(baseDir, cfg.Routes.LogsDir)
-
+	
 	_ = os.MkdirAll(cfg.Routes.StructsDir, 0755)
 	_ = os.MkdirAll(cfg.Routes.DepsDir, 0755)
 	_ = os.MkdirAll(cfg.Routes.LogsDir, 0755)
