@@ -15,10 +15,11 @@ import (
 
 type UI interface {
 	Select(templates []*entity.Template) (*entity.Template, error)
-	Input() (*entity.Variables, error)
+	DynamicInput(title string, fields []*entity.FieldConfig) (map[string]string, error)
 	ConfirmOverwrite(fileName string) (bool, error)
-	ShowStatus(msg string, duration time.Duration) error 
+	ShowStatus(msg string, duration time.Duration) error
 	NewSpinner(title string, task func() error) error
+	ShowTemplatesTable(templates []*entity.TemplateInfo)
 }
 
 type UseCase struct {

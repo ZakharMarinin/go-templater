@@ -14,10 +14,17 @@ import (
 
 func (u *UseCase) MakeStructTemplate(homeDir string) error {
 	const op = "usecase.MakeStructTemplate"
-
 	log := u.log.With("operation", op)
 
-	variables, err := u.ui.Input()
+	nameKey := "name"
+	descKey := "desc"
+	
+	configs := []*entity.FieldConfig {
+	    {Key: nameKey, Placeholder: "Name (required)", Required: true, Width: 32},
+	    {Key: descKey, Placeholder: "Description (optional)", Required: false, Width: 64, CharLimit: 64},
+	}
+	
+	variables, err := u.ui.DynamicInput("Create template", configs)
 	if err != nil {
 		if errors.Is(err, response.ErrCanceled) {
 			return nil
@@ -28,14 +35,25 @@ func (u *UseCase) MakeStructTemplate(homeDir string) error {
 		return err
 	}
 
-	if !isUnique(u.cfg.Routes.StructsDir, variables.Name) {
-		err := u.confirmStatus(variables.Name)
+	if !isUnique(u.cfg.Routes.StructsDir, variables[nameKey]) {
+		err := u.confirmStatus(variables[nameKey])
 		if err != nil {
 			return err
 		}
 	}
+
+	root, err := getUserTree(homeDir)
+	if err != nil {
+		return fmt.Errorf("could not get user's directory tree. error: %w", err)
+	}
+
+	template := &entity.Template{
+		Name:        variables[nameKey],
+		Description: variables[descKey],
+		Nodes:       root,
+	}
 	
-	err = createDirFile(u.cfg.Routes.StructsDir, homeDir, variables)
+	err = createDirFile(u.cfg.Routes.StructsDir, homeDir, template)
 	if err != nil {
 		log.Error("could not created template", "error", err)
 
@@ -45,24 +63,13 @@ func (u *UseCase) MakeStructTemplate(homeDir string) error {
 	return nil
 }
 
-func createDirFile(path, homeDir string, variables *entity.Variables) error {
-	root, err := getUserTree(homeDir)
-	if err != nil {
-		return fmt.Errorf("could not get user's directory tree. error: %w", err)
-	}
-
-	template := &entity.Template{
-		Name:        variables.Name,
-		Description: variables.Description,
-		Nodes:       root,
-	}
-
+func createDirFile(path, homeDir string, template *entity.Template) error {
 	data, err := json.Marshal(template)
 	if err != nil {
 		return fmt.Errorf("could not marshal data. error: %w", err)
 	}
 
-	name := variables.Name + ".json"
+	name := template.Name + ".json"
 
 	fullPath := filepath.Join(path, name)
 

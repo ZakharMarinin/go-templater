@@ -53,13 +53,7 @@ func insertDeps(deps []*entity.Dependency, path string) error {
 	args = append(args, "get")
 
 	for _, dep := range deps {
-		version := dep.Version
-		if version == "" {
-			version = "latest"
-		}
-
-		target := fmt.Sprintf("%s@%s", dep.URL, version)
-		args = append(args, target)
+		args = append(args, dep.URL)
 	}
 
 	cmd := exec.Command("go", args...)

@@ -17,7 +17,15 @@ func (u *UseCase) MakeDepsTemplate(homeDir string) error {
 
 	log := u.log.With("operation", op)
 
-	variables, err := u.ui.Input()
+	nameKey := "name"
+	descKey := "desc"
+	
+	configs := []*entity.FieldConfig {
+	    {Key: nameKey, Placeholder: "Name (required)", Required: true, Width: 32},
+	    {Key: descKey, Placeholder: "Description (optional)", Required: false, Width: 64, CharLimit: 64},
+	}
+	
+	variables, err := u.ui.DynamicInput("Create template", configs)
 	if err != nil {
 		log.Error("could not get template variables: %w", "error", err)
 
@@ -42,16 +50,16 @@ func (u *UseCase) MakeDepsTemplate(homeDir string) error {
 		}
 	}
 
-	if !isUnique(u.cfg.Routes.DepsDir, variables.Name) {
-		err := u.confirmStatus(variables.Name)
+	if !isUnique(u.cfg.Routes.DepsDir, variables[nameKey]) {
+		err := u.confirmStatus(variables[nameKey])
 		if err != nil {
 			return err
 		}
 	}
 	
 	template := &entity.Template{
-		Name: variables.Name,
-		Description: variables.Description,
+		Name: variables[nameKey],
+		Description: variables[descKey],
 		Dependencies: deps,
 	}
 	
