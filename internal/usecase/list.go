@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"go-templater/internal/domain/entity"
+	"github.com/ZakharMarinin/go-templater/internal/domain/entity"
 	"os"
 )
 

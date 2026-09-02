@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"go-templater/internal/config"
+	"github.com/ZakharMarinin/go-templater/internal/config"
 	"os"
 
 	"github.com/spf13/cobra"

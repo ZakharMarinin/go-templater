@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"fmt"
-	"go-templater/internal/domain/entity"
+	"github.com/ZakharMarinin/go-templater/internal/domain/entity"
 	"os"
 	"os/exec"
 )
@@ -71,7 +71,7 @@ func insertDirs(nodes []*entity.Node, path string) error {
 				return err
 			}
 		} else {
-			err := os.WriteFile(name, []byte{}, 0777)
+			err := os.WriteFile(name, []byte(i.Content), 0777)
 			if err != nil {
 				return err
 			}

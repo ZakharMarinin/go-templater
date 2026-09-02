@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"go-templater/internal/config"
-	"go-templater/internal/domain/entity"
+	"github.com/ZakharMarinin/go-templater/internal/config"
+	"github.com/ZakharMarinin/go-templater/internal/domain/entity"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -20,6 +20,7 @@ type UI interface {
 	ShowStatus(msg string, duration time.Duration) error
 	NewSpinner(title string, task func() error) error
 	ShowTemplatesTable(templates []*entity.TemplateInfo)
+	SelectContentExclusions(nodes []*entity.Node) error
 }
 
 type UseCase struct {
@@ -56,12 +57,12 @@ func getTemplates(path string) ([]*entity.Template, error) {
 	var templates []*entity.Template
 
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() {
-			return nil
-		}
-
 		if err != nil {
 			return err
+		}
+
+		if d.IsDir() {
+			return nil
 		}
 
 		data, err := os.ReadFile(path)

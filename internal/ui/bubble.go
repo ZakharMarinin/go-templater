@@ -1,6 +1,6 @@
 package ui
 
-import "go-templater/internal/config"
+import "github.com/ZakharMarinin/go-templater/internal/config"
 
 const (
 	enter  = "enter"
