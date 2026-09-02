@@ -118,3 +118,7 @@ make build    # build ./go-templater in the repo root
 make run ARGS="make struct -d ./example"
 make help     # list all targets
 ```
+
+## License
+
+[MIT](LICENSE)
