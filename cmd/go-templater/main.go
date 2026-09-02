@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"go-templater/internal/app"
-	"go-templater/internal/config"
-	"go-templater/internal/libs/logger"
+	"github.com/ZakharMarinin/go-templater/internal/app"
+	"github.com/ZakharMarinin/go-templater/internal/config"
+	"github.com/ZakharMarinin/go-templater/internal/libs/logger"
 )
 
 func main() {

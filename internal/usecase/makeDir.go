@@ -1,16 +1,20 @@
 package usecase
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go-templater/internal/domain/entity"
-	"go-templater/pkg/response"
+	"github.com/ZakharMarinin/go-templater/internal/domain/entity"
+	"github.com/ZakharMarinin/go-templater/pkg/response"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 )
+
+const maxContentSize = 256 * 1024
 
 func (u *UseCase) MakeStructTemplate(homeDir string) error {
 	const op = "usecase.MakeStructTemplate"
@@ -45,6 +49,17 @@ func (u *UseCase) MakeStructTemplate(homeDir string) error {
 	root, err := getUserTree(homeDir)
 	if err != nil {
 		return fmt.Errorf("could not get user's directory tree. error: %w", err)
+	}
+
+	err = u.ui.SelectContentExclusions(root)
+	if err != nil {
+		if errors.Is(err, response.ErrCanceled) {
+			return nil
+		}
+
+		log.Error("could not select content exclusions", "error", err)
+
+		return err
 	}
 
 	template := &entity.Template{
@@ -107,9 +122,10 @@ func getUserTree(homeDir string) ([]*entity.Node, error) {
 		folderPath, _ := strings.CutPrefix(path, fullPath)
 
 		node := &entity.Node{
-			Name:  d.Name(),
-			Path:  folderPath,
-			IsDir: d.IsDir(),
+			Name:    d.Name(),
+			Path:    folderPath,
+			IsDir:   d.IsDir(),
+			Content: readNodeContent(path, d),
 		}
 
 		nodesMap[path] = node
@@ -155,4 +171,30 @@ func nameFilter(name string, isDir bool) error {
 	}
 
 	return nil
+}
+
+func readNodeContent(path string, d fs.DirEntry) string {
+	if d.IsDir() {
+		return ""
+	}
+
+	info, err := d.Info()
+	if err != nil || info.Size() == 0 || info.Size() > maxContentSize {
+		return ""
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil || !looksLikeText(data) {
+		return ""
+	}
+
+	return string(data)
+}
+
+func looksLikeText(data []byte) bool {
+	if bytes.IndexByte(data, 0) != -1 {
+		return false
+	}
+
+	return utf8.Valid(data)
 }

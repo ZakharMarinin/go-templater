@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"fmt"
-	"go-templater/internal/domain/entity"
-	"go-templater/pkg/response"
+	"github.com/ZakharMarinin/go-templater/internal/domain/entity"
+	"github.com/ZakharMarinin/go-templater/pkg/response"
 	"os"
 	"os/exec"
 	"path/filepath"

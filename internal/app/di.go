@@ -1,10 +1,10 @@
 package app
 
 import (
-	"go-templater/internal/cli"
-	"go-templater/internal/config"
-	"go-templater/internal/ui"
-	"go-templater/internal/usecase"
+	"github.com/ZakharMarinin/go-templater/internal/cli"
+	"github.com/ZakharMarinin/go-templater/internal/config"
+	"github.com/ZakharMarinin/go-templater/internal/ui"
+	"github.com/ZakharMarinin/go-templater/internal/usecase"
 	"log/slog"
 )
 

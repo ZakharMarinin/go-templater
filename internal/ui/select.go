@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"go-templater/internal/domain/entity"
+	"github.com/ZakharMarinin/go-templater/internal/domain/entity"
 
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"

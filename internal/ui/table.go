@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"go-templater/internal/domain/entity"
+	"github.com/ZakharMarinin/go-templater/internal/domain/entity"
 	"strconv"
 
 	"charm.land/lipgloss/v2"

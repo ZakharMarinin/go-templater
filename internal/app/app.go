@@ -1,7 +1,7 @@
 package app
 
 import (
-	"go-templater/internal/config"
+	"github.com/ZakharMarinin/go-templater/internal/config"
 	"log/slog"
 )
 

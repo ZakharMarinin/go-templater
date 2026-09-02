@@ -1,4 +1,4 @@
-module go-templater
+module github.com/ZakharMarinin/go-templater
 
 go 1.25.3
 

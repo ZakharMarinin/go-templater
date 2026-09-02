@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"go-templater/internal/domain/entity"
+	"github.com/ZakharMarinin/go-templater/internal/domain/entity"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -109,34 +109,34 @@ func copyDeps(path string) ([]*entity.Dependency, error) {
 	var deps []*entity.Dependency
 
 	for _, line := range lines {
-		parts := strings.Fields(line)
-		if len(parts) > 0 {
-			if len(parts) != 2 {
-				continue
-			}
-			
-			version := parts[1]
-			
-			nameParts := strings.Split(parts[0], "/")
-
-			name := strings.Join(nameParts[1:], "/")
-			url := strings.Join(nameParts[0:], "/")
-			
-			dep := entity.Dependency{
-				Name: name,
-				URL: url,
-				Version: version,
-			}
-
-			if !strings.Contains(url, ".") && url != "go" && url != "os" {
-				continue
-			}
-
-			deps = append(deps, &dep)
+		dep, err := parseDependencyLine(line)
+		if err != nil {
+			continue
 		}
+
+		if !strings.Contains(dep.URL, ".") && dep.URL != "go" && dep.URL != "os" {
+			continue
+		}
+
+		deps = append(deps, dep)
 	}
-	
+
 	return deps, nil
+}
+
+func parseDependencyLine(line string) (*entity.Dependency, error) {
+	fields := strings.Fields(line)
+	if len(fields) != 2 {
+		return nil, fmt.Errorf("invalid dependency line: %q", line)
+	}
+
+	url := fields[0]
+	version := fields[1]
+
+	nameParts := strings.Split(url, "/")
+	name := strings.Join(nameParts[1:], "/")
+
+	return &entity.Dependency{Name: name, URL: url, Version: version}, nil
 }
 
 func readDeps() ([]*entity.Dependency, error) {
@@ -145,30 +145,14 @@ func readDeps() ([]*entity.Dependency, error) {
 	fmt.Println("Please, write dependecies like 'github.com/spf13/cobra v1.10.2' and separate them with enter: ")
 
 	var dependencies []*entity.Dependency
-	
+
 	for scanner.Scan() && scanner.Text() != "" {
-		line := scanner.Text()
-		
-		parts := strings.Split(line, " ")
-
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid dependency")
-		}
-		
-		version := parts[1]
-		
-		nameParts := strings.Split(parts[0], "/")
-
-		name := strings.Join(nameParts[1:], "/")
-		url := strings.Join(nameParts[0:], "/")
-		
-		dep := entity.Dependency{
-			Name: name,
-			URL: url,
-			Version: version,
+		dep, err := parseDependencyLine(scanner.Text())
+		if err != nil {
+			return nil, err
 		}
 
-		dependencies = append(dependencies, &dep)
+		dependencies = append(dependencies, dep)
 	}
 	err := scanner.Err()
 	if err != nil {
